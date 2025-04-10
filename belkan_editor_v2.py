@@ -85,6 +85,7 @@ class MatrixEditor(tk.Tk):
         self.mode = "color"
         self.show_text = True
         self.is_drawing = False
+        self.view_mode = tk.StringVar(value='normal')
 
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -128,6 +129,9 @@ class MatrixEditor(tk.Tk):
         self.toggle_text_button = tk.Button(self, text="Toggle Text", command=self.toggle_text)
         self.toggle_text_button.pack()
 
+        self.view_mode_menu = tk.OptionMenu(self, self.view_mode, "normal", "color", "height", command=lambda _: self.draw_matrix())
+        self.view_mode_menu.pack()
+
         self.save_button = tk.Button(self, text="Save", command=self.save_map)
         self.save_button.pack()
 
@@ -163,38 +167,105 @@ class MatrixEditor(tk.Tk):
         for y in range(self.rows):
             for x in range(self.cols):
                 #base_color = COLORS.get(self.terrain_matrix[y][x], 'white')
-                base_color = mcolors.to_hex(COLORS.get(self.terrain_matrix[y][x], (1.0, 1.0, 1.0)))
-                shaded_color = HEIGHT_SHADES[base_color][self.height_matrix[y][x]]
+                # base_color = mcolors.to_hex(COLORS.get(self.terrain_matrix[y][x], (1.0, 1.0, 1.0)))
+                # shaded_color = HEIGHT_SHADES[base_color][self.height_matrix[y][x]]
+
+                terrain_char = self.terrain_matrix[y][x]
+                height = self.height_matrix[y][x]
+
+                if self.view_mode.get() == 'normal':
+                    base_color = mcolors.to_hex(COLORS.get(terrain_char, (1.0, 1.0, 1.0)))
+                    shaded_color = HEIGHT_SHADES[base_color][height]
+                elif self.view_mode.get() == 'color':
+                    base_color = mcolors.to_hex(COLORS.get(terrain_char, (1.0, 1.0, 1.0)))
+                    shaded_color = base_color
+                elif self.view_mode.get() == 'height':
+                    gray = height / 5  # 0.0 (negro) a 1.0 (blanco)
+                    shaded_color = mcolors.to_hex((gray, gray, gray))
+                else:
+                    shaded_color = "#FFFFFF"
+
                 self.canvas.create_rectangle(
                     x * cell_width, y * cell_height,
                     (x + 1) * cell_width, (y + 1) * cell_height,
                     fill=shaded_color, outline='', tags='pixel')
                 if self.show_text:
+                    # self.canvas.create_text(
+                    #     x * cell_width + cell_width//2, y * cell_height + cell_height//2,
+                    #     text=f"{self.terrain_matrix[y][x]}/{self.height_matrix[y][x]}",
+                    #     fill='black', font=('Arial', 10, 'bold')
+                    # )
+                    text_color = 'black'
+                    if self.view_mode.get() == 'height' and height == 0:
+                        text_color = 'white'
+
                     self.canvas.create_text(
                         x * cell_width + cell_width//2, y * cell_height + cell_height//2,
-                        text=f"{self.terrain_matrix[y][x]}/{self.height_matrix[y][x]}",
-                        fill='black', font=('Arial', 10, 'bold')
+                        text=f"{terrain_char}/{height}",
+                        fill=text_color, font=('Arial', 10, 'bold'), tags='pixel'   
                     )
 
+
+    # def update_single_cell(self, x, y):
+    #     """Updates only the affected cell instead of redrawing everything."""
+    #     cell_width = self.canvas.winfo_width() // self.cols
+    #     cell_height = self.canvas.winfo_height() // self.rows
+    #     # base_color = COLORS.get(self.terrain_matrix[y][x], 'white')
+    #     base_color = mcolors.to_hex(COLORS.get(self.terrain_matrix[y][x], (1.0, 1.0, 1.0)))
+    #     shaded_color = HEIGHT_SHADES[base_color][self.height_matrix[y][x]]
+        
+    #     self.canvas.create_rectangle(
+    #         x * cell_width, y * cell_height,
+    #         (x + 1) * cell_width, (y + 1) * cell_height,
+    #         fill=shaded_color, outline='', tags=f'cell_{x}_{y}'
+    #     )
+        
+    #     if self.show_text:
+    #         self.canvas.create_text(
+    #             x * cell_width + cell_width//2, y * cell_height + cell_height//2,
+    #             text=f"{self.terrain_matrix[y][x]}/{self.height_matrix[y][x]}",
+    #             fill='black', font=('Arial', 10, 'bold'), tags=f'text_{x}_{y}'
+    #         )
+
+
     def update_single_cell(self, x, y):
-        """Updates only the affected cell instead of redrawing everything."""
         cell_width = self.canvas.winfo_width() // self.cols
         cell_height = self.canvas.winfo_height() // self.rows
-        # base_color = COLORS.get(self.terrain_matrix[y][x], 'white')
-        base_color = mcolors.to_hex(COLORS.get(self.terrain_matrix[y][x], (1.0, 1.0, 1.0)))
-        shaded_color = HEIGHT_SHADES[base_color][self.height_matrix[y][x]]
-        
+
+        terrain_char = self.terrain_matrix[y][x]
+        height = self.height_matrix[y][x]
+
+        if self.view_mode.get() == 'normal':
+            base_color = mcolors.to_hex(COLORS.get(terrain_char, (1.0, 1.0, 1.0)))
+            shaded_color = HEIGHT_SHADES[base_color][height]
+        elif self.view_mode.get() == 'color':
+            shaded_color = mcolors.to_hex(COLORS.get(terrain_char, (1.0, 1.0, 1.0)))
+        elif self.view_mode.get() == 'height':
+            gray = height / 5  # 0.0 (negro) a 1.0 (blanco)
+            shaded_color = mcolors.to_hex((gray, gray, gray))
+        else:
+            shaded_color = "#FFFFFF"
+
         self.canvas.create_rectangle(
             x * cell_width, y * cell_height,
             (x + 1) * cell_width, (y + 1) * cell_height,
             fill=shaded_color, outline='', tags=f'cell_{x}_{y}'
         )
-        
+
         if self.show_text:
+            # self.canvas.create_text(
+            #     x * cell_width + cell_width // 2, y * cell_height + cell_height // 2,
+            #     text=f"{terrain_char}/{height}",
+            #     fill='black', font=('Arial', 10, 'bold'), tags=f'text_{x}_{y}'
+            # )
+            text_color = 'black'
+            if self.view_mode.get() == 'height' and height == 0:
+                text_color = 'white'
+
             self.canvas.create_text(
                 x * cell_width + cell_width//2, y * cell_height + cell_height//2,
-                text=f"{self.terrain_matrix[y][x]}/{self.height_matrix[y][x]}",
-                fill='black', font=('Arial', 10, 'bold'), tags=f'text_{x}_{y}'
+                text=f"{terrain_char}/{height}",
+                fill=text_color, font=('Arial', 10, 'bold'), tags='pixel'   
             )
 
 

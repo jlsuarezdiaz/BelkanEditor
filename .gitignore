@@ -1,3 +1,4 @@
 *.map
 mapas/*.map
+mapas/
 belkan_editor_v2 copy.py
