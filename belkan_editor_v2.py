@@ -84,6 +84,7 @@ class MatrixEditor(tk.Tk):
         self.selected_height = tk.IntVar(value=0)
         self.mode = "color"
         self.show_text = True
+        self.font_size = 10;
         self.is_drawing = False
         self.view_mode = tk.StringVar(value='normal')
 
@@ -132,6 +133,12 @@ class MatrixEditor(tk.Tk):
         self.view_mode_menu = tk.OptionMenu(self, self.view_mode, "normal", "color", "height", command=lambda _: self.draw_matrix())
         self.view_mode_menu.pack()
 
+        font_size_frame = tk.Frame(self)
+        font_size_frame.pack()
+
+        tk.Button(font_size_frame, text="A+", command=self.increase_font_size).pack(side=tk.LEFT)
+        tk.Button(font_size_frame, text="A-", command=self.decrease_font_size).pack(side=tk.LEFT)
+
         self.save_button = tk.Button(self, text="Save", command=self.save_map)
         self.save_button.pack()
 
@@ -158,6 +165,15 @@ class MatrixEditor(tk.Tk):
 
         # Resize event
         self.bind("<Configure>", self.on_resize)
+
+    def increase_font_size(self):
+        self.font_size += 1
+        self.draw_matrix()
+
+    def decrease_font_size(self):
+        if self.font_size > 1:
+            self.font_size -= 1
+            self.draw_matrix()
 
     def draw_matrix(self):
         self.canvas.delete('pixel')
@@ -202,7 +218,7 @@ class MatrixEditor(tk.Tk):
                     self.canvas.create_text(
                         x * cell_width + cell_width//2, y * cell_height + cell_height//2,
                         text=f"{terrain_char}/{height}",
-                        fill=text_color, font=('Arial', 10, 'bold'), tags='pixel'   
+                        fill=text_color, font=('Arial', self.font_size, 'bold'), tags='pixel'   
                     )
 
 
@@ -265,7 +281,7 @@ class MatrixEditor(tk.Tk):
             self.canvas.create_text(
                 x * cell_width + cell_width//2, y * cell_height + cell_height//2,
                 text=f"{terrain_char}/{height}",
-                fill=text_color, font=('Arial', 10, 'bold'), tags='pixel'   
+                fill=text_color, font=('Arial', self.font_size, 'bold'), tags='pixel'   
             )
 
 
